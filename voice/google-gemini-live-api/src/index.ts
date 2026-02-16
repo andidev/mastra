@@ -1752,6 +1752,17 @@ export class GeminiLiveVoice extends MastraVoice<
           };
         };
       };
+      /** For native audio models - response_modalities and speech_config required */
+      generation_config?: {
+        response_modalities?: ('AUDIO' | 'TEXT')[];
+        speech_config?: {
+          voice_config?: {
+            prebuilt_voice_config?: {
+              voice_name?: string;
+            };
+          };
+        };
+      };
       systemInstruction?: {
         parts: Array<{
           text: string;
@@ -1846,6 +1857,20 @@ export class GeminiLiveVoice extends MastraVoice<
       setupMessage.setup.tools = allTools;
       this.log('Including tools in setup message', { toolCount: allTools.length });
     }
+
+    // Include generation_config for native audio models. Required to fix
+    // "Cannot extract voices from a non-audio request" - the API needs
+    // response_modalities and speech_config to recognize this as an audio session.
+    setupMessage.setup.generation_config = {
+      response_modalities: ['AUDIO'],
+      speech_config: {
+        voice_config: {
+          prebuilt_voice_config: {
+            voice_name: this.options.speaker || DEFAULT_VOICE,
+          },
+        },
+      },
+    };
 
     this.log('Sending Live API setup message:', setupMessage);
 
